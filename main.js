@@ -1,50 +1,72 @@
 const SHA256 = require('crypto-js/sha256');
 
-class Block{
+class Iteron{
         constructor(index, timestamp, data, previousHash = ''){
                 this.index = index;
                 this.timestamp = timestamp;
                 this.data = data;
                 this.previousHash = previousHash;
-                this.hash = this.createHash();
+                this.hash = this.createCurrentIteronHash();
+                this.nonce = 0;
         }
 
-        createHash(createdHash) {
-                createdHash = SHA256(this.index + this.timestamp + JSON.stringify(this.data).toString() + this.previousHash);
-                return createdHash;
+        createCurrentIteronHash(){
+                return SHA256(this.index + this.timestamp + JSON.stringify(this.data) + this.previousHash + this.nonce).toString();
+        }
 
+        helicateIteron(difficulty){
+                while(this.hash.substring(0, difficulty) !== Array(difficulty + 1 ).join("0")){
+                        this.nonce++;
+                        this.hash = this.createCurrentIteronHash();
+                }
+
+                console.log("Iteron helicated: " + this.hash);
         }
 }
 
-
-
-class Blockchain{
+class Plasmid{
         constructor(){
-                this.chain = [this.createGenesisBlock()];
+                this.replicon = [this.createFirstIteron()];
+                this.difficulty = 5;
         }
 
-        createGenesisBlock(genesisBlock){
-                genesisBlock = new Block(0, "00/00/0000", "Genesis Block", "0");
-                return genesisBlock;
+        createFirstIteron(){
+                return new Iteron(0, "00/00/0000", "this is the first iteron", "0");
         }
 
-        getLastBlock(lastBlock){
-                lastBlock = this.chain[this.chain.length - 1];
+        getLastIteron(){
+                return this.replicon[this.replicon.length - 1];
         }
 
-        createNewBlock(newBlock){
-                newBlock.previousHash = this.getLastBlock().hash;
-                newBlock.hash = newBlock.createHash();
-                this.chain.push(newBlock);
+        createNewIteron(newIteron){
+                newIteron.previousHash = this.getLastIteron().hash;
+                newIteron.helicateIteron(this.difficulty);
+                this.replicon.push(newIteron);
+        }
+
+        isRepliconMutated(){
+                for(let i = 1; i < this.replicon.length; i++){
+                        const currentReplicon = this.replicon[i];
+                        const previousReplicon = this.replicon[i - 1];
+
+                        if(currentReplicon.hash !== currentReplicon.createCurrentIteronHash()){
+                                return true;
+                        }
+
+                        if(currentReplicon.previousHash !== previousReplicon.createCurrentIteronHash()){
+                                return true;
+                        } 
+                }
+
+                return false;
         }
 }
 
+const lyptirCoin = new Plasmid();
 
+console.log("Helicating block: 1..." );
+lyptirCoin.createNewIteron(new Iteron(1, "04/26/2023", {amount:4}));
 
+console.log("Helicating block: 2..." );
+lyptirCoin.createNewIteron(new Iteron(2, "04/27/2023", {amount:10}));
 
-let lyptirCoin = new Blockchain();
-
-lyptirCoin.createNewBlock(new Block(1, "04/25/2023", {amount: 4}));
-lyptirCoin.createNewBlock(new Block(2, "04/26/2023", {amount: 10}));
-
-console.log(JSON.stringify(lyptirCoin, null, 4));
